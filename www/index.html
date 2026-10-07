@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d3b34">
+<title>Outside</title>
+<style>
+:root{
+  --bg:#e9eef0; --ink:#17302a; --mute:#5d716b; --line:#c5d1d3;
+  --btn:#1d3b34; --btn-ink:#f2f7f4; --sun:#c8892b; --dot:#cfdadc;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0f1b19;--ink:#e3ede8;--mute:#92a8a1;--line:#27403b;--btn:#d8e8df;--btn-ink:#0f1b19;--sun:#e0a248;--dot:#223632}
+}
+:root[data-theme="dark"]{--bg:#0f1b19;--ink:#e3ede8;--mute:#92a8a1;--line:#27403b;--btn:#d8e8df;--btn-ink:#0f1b19;--sun:#e0a248;--dot:#223632}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:30rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:400;margin:0}
+.hero{text-align:left;padding:1rem 0 .5rem}
+.num{font:400 6.5rem/1 Georgia,"Times New Roman",serif;letter-spacing:-.03em}
+.unit{font-size:1.15rem;color:var(--mute);margin-top:.25rem}
+.week{display:flex;justify-content:space-between;align-items:flex-end;margin:1.5rem 0 .25rem;border-bottom:2px solid var(--ink);padding-bottom:.6rem}
+.day{display:flex;flex-direction:column;align-items:center;gap:.35rem;font-size:.8rem;color:var(--mute);width:2.4rem}
+.dot{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--dot)}
+.dot.on{background:var(--sun)}
+.dot.rest{background:transparent;border:2px dashed var(--mute)}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.9rem;margin:.5rem 0 1.75rem}
+button{font:inherit;cursor:pointer}
+.go{width:100%;padding:1.1rem;border:0;border-radius:.6rem;background:var(--btn);color:var(--btn-ink);font-size:1.2rem;font-weight:600}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:.25rem 0}
+.link:disabled{opacity:.4;text-decoration:none;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+label{display:block;font-size:.9rem;color:var(--mute);margin:1rem 0 .25rem}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);padding:.5rem 0;border-radius:0}
+textarea{min-height:5rem;resize:vertical}
+.timer{font:400 3rem/1 Georgia,serif;margin:.5rem 0}
+h2{font-size:1.5rem;margin:2.5rem 0 .5rem}
+.entry{border-top:1px solid var(--line);padding:1rem 0}
+.entry .top{display:flex;justify-content:space-between;gap:1rem}
+.entry b{font-family:Georgia,serif;font-weight:400;font-size:1.1rem}
+.entry p{margin:.35rem 0;white-space:pre-wrap}
+.sounds{color:var(--mute);font-size:.9rem}
+.empty{color:var(--mute);border-top:1px solid var(--line);padding:1rem 0}
+.listen{margin:1.25rem 0 0}
+.listen .go{background:transparent;color:var(--ink);border:2px solid var(--ink);font-size:1rem;padding:.8rem}
+.listen .go:disabled{opacity:.5;cursor:default}
+#heard{color:var(--mute);margin:.5rem 0 0;min-height:1.5rem}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero" aria-live="polite">
+    <div class="num" id="streak">0</div>
+    <div class="unit" id="unit">days outside in a row</div>
+  </section>
+
+  <div class="week" id="week" aria-label="Last 7 days"></div>
+  <div class="meta">
+    <span id="tokens"></span>
+    <button class="link" id="rest">Take a rest day</button>
+  </div>
+
+  <section id="idle">
+    <label for="place">Where are you going?</label>
+    <input id="place" placeholder="Riverside path, backyard, park" autocomplete="off">
+    <p></p>
+    <button class="go" id="start">I'm outside</button>
+  </section>
+
+  <section id="live" hidden>
+    <div class="unit" id="where"></div>
+    <div class="timer" id="timer">0:00</div>
+    <div class="listen">
+      <button class="go" id="listen">Listen for 10 seconds</button>
+      <div id="heard" aria-live="polite"></div>
+    </div>
+    <label for="note">What did you notice?</label>
+    <textarea id="note" placeholder="Birds, wind, a smell, a sound"></textarea>
+    <p></p>
+    <button class="go" id="end">I'm back</button>
+  </section>
+
+  <h2>Journal</h2>
+  <div id="journal"></div>
+</main>
+
+<script>
+const KEY = 'outside:v1';
+let S = { sessions: [], rest: [], active: null };
+try { const r = localStorage.getItem(KEY); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+const $ = id => document.getElementById(id);
+const dkey = d => new Date(d).toLocaleDateString('sv-SE');
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
+const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
+
+function streak() {
+  const out = outsideDays(), rest = new Set(S.rest);
+  const has = k => out.has(k) || rest.has(k);
+  let d = new Date(), n = 0;
+  if (!has(dkey(d))) d = addDays(d, -1);   // today not done yet: streak still alive
+  while (has(dkey(d))) { n++; d = addDays(d, -1); }
+  return n;
+}
+const tokens = () => Math.max(0, Math.floor(outsideDays().size / 7) - S.rest.length);
+
+const SOUND_LABELS = { birds: 'Birds', wind: 'Wind and leaves', water: 'Water', traffic: 'Traffic', voices: 'Voices', animals: 'Animals', bells: 'Bells', footsteps: 'Footsteps' };
+const soundText = o => Object.keys(o || {}).map(k => SOUND_LABELS[k] || k).join(', ');
+
+function el(tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text != null) e.textContent = text;
+  if (cls) e.className = cls;
+  return e;
+}
+
+function render() {
+  const n = streak();
+  $('streak').textContent = n;
+  $('unit').textContent = n === 1 ? 'day outside in a row' : 'days outside in a row';
+
+  const out = outsideDays(), rest = new Set(S.rest);
+  const week = $('week'); week.replaceChildren();
+  for (let i = 6; i >= 0; i--) {
+    const d = addDays(new Date(), -i), k = dkey(d);
+    const day = el('div', null, 'day');
+    day.append(el('div', null, 'dot' + (out.has(k) ? ' on' : rest.has(k) ? ' rest' : '')));
+    day.append(el('span', d.toLocaleDateString(undefined, { weekday: 'narrow' })));
+    week.append(day);
+  }
+
+  const t = tokens();
+  $('tokens').textContent = t === 1 ? '1 rest day saved' : t + ' rest days saved';
+  const todayDone = out.has(dkey(new Date())) || rest.has(dkey(new Date()));
+  $('rest').disabled = t < 1 || todayDone;
+
+  $('idle').hidden = !!S.active;
+  $('live').hidden = !S.active;
+  if (S.active) {
+    $('where').textContent = S.active.place ? 'Out at ' + S.active.place : 'Out and about';
+    $('heard').textContent = soundText(S.active.sounds) ? 'This walk: ' + soundText(S.active.sounds) : '';
+  }
+
+  const j = $('journal'); j.replaceChildren();
+  if (!S.sessions.length) {
+    j.append(el('div', 'Your walks will show up here. Start with five minutes.', 'empty'));
+  }
+  [...S.sessions].reverse().forEach(s => {
+    const row = el('div', null, 'entry');
+    const top = el('div', null, 'top');
+    top.append(el('b', new Date(s.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })));
+    top.append(el('span', mins(s) + ' min', 'sounds'));
+    row.append(top);
+    if (s.place) row.append(el('div', s.place, 'sounds'));
+    if (soundText(s.sounds)) row.append(el('div', 'Heard: ' + soundText(s.sounds), 'sounds'));
+    if (s.note) row.append(el('p', s.note));
+    const del = el('button', 'Delete', 'link');
+    del.onclick = () => { if (confirm('Delete this entry?')) { S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
+    row.append(del);
+    j.append(row);
+  });
+}
+
+let tick = null;
+function runTimer() {
+  clearInterval(tick);
+  if (!S.active) return;
+  const upd = () => {
+    const sec = Math.floor((Date.now() - S.active.start) / 1000);
+    $('timer').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  };
+  upd(); tick = setInterval(upd, 1000);
+}
+
+$('start').onclick = () => {
+  S.active = { start: Date.now(), place: $('place').value.trim(), sounds: {} };
+  save(); render(); runTimer();
+};
+$('end').onclick = () => {
+  const a = S.active; if (!a) return;
+  S.sessions.push({ id: String(a.start), start: a.start, end: Date.now(), place: a.place, note: $('note').value.trim(), sounds: a.sounds || {} });
+  S.active = null; $('note').value = ''; $('place').value = '';
+  clearInterval(tick); save(); render();
+};
+$('rest').onclick = () => { S.rest.push(dkey(new Date())); save(); render(); };
+
+render(); runTimer();
+</script>
+<script src="lib/tf.min.js"></script>
+<script src="listen.js"></script>
+</body>
+</html>
