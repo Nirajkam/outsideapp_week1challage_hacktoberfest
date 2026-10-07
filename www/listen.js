@@ -18,12 +18,13 @@
       if (!window.tf || typeof window.tf.loadGraphModel !== 'function') {
         throw new Error('TensorFlow.js is unavailable in this browser.');
       }
-      const graph = await tf.loadGraphModel('model/yamnet/model.json');
+      const graph = await tf.loadGraphModel('model/yamnet/model.json?v=2');
       model = graph;
     } catch (error) {
       console.warn('Sound recognition is unavailable in this build:', error);
       model = 'unavailable';
-      say('Sound recognition is unavailable on this device. Your trip details are still saved.');
+      if (S.active) S.active.soundDetectionUnavailable = true;
+      say('Sound recognition is unavailable. Your walk note will still use time and steps.');
       label('Sound detection unavailable');
       throw error;
     }
@@ -99,6 +100,7 @@
       say('Listening...');
     } catch (e) {
       console.error(e);
+      if (S.active) S.active.soundDetectionUnavailable = true;
       stop(); userPaused = true;
       label('Listening off. Tap to retry');
       say("Couldn't listen: " + (e.message || e.name) + '. Check microphone permission.');

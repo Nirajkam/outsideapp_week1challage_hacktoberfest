@@ -50,6 +50,7 @@
     .listen .go{background:transparent;color:var(--ink);border:2px solid var(--ink);box-shadow:none;font-size:1rem;padding:.85rem}
     #listen.on{animation:ring 1.4s infinite}
     #heard{color:var(--mute);margin:.6rem .5rem 0;min-height:1.5rem}
+    .auto-note{margin:1rem .5rem;color:var(--mute)}
     .entry{display:flex;gap:1rem;padding:1rem;margin-bottom:.75rem;background:var(--panel);border-radius:1.25rem}
     .date{display:flex;flex-direction:column;align-items:center;min-width:2.6rem}
     .date b{font:400 1.9rem/1 "Iowan Old Style",Palatino,Georgia,serif}
@@ -134,14 +135,7 @@
       <div id="heard" aria-live="polite"></div>
       <div class="sounds" id="top3" style="margin:.25rem .5rem 0"></div>
     </div>
-    <div class="detail-grid">
-      <div class="field"><label for="route">Route</label><input id="route" placeholder="River loop, forest trail, neighborhood"></div>
-      <div class="field"><label for="weather">Weather</label><input id="weather" placeholder="Clear, breezy, warm, rain"></div>
-      <div class="field"><label for="companions">Company</label><input id="companions" placeholder="Solo, with friends, dog"></div>
-      <div class="field"><label for="mood">Mood</label><input id="mood" placeholder="Calm, energized, reflective"></div>
-      <div class="field full"><label for="note">What did you notice?</label><textarea id="note" placeholder="Birds, wind, a smell, a sound"></textarea></div>
-      <div class="field full"><label for="highlights">Highlights</label><textarea id="highlights" placeholder="Best moment, scenic view, favorite sound, or a small win"></textarea></div>
-    </div>
+    <p class="auto-note">Your walk note is written on this phone from its time, steps, and any sounds it can identify.</p>
     <p></p>
     <button class="go" id="end">I'm back</button>
   </section>
@@ -169,19 +163,6 @@
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
   const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
-  const tripDetails = () => ({
-    place: $('place').value.trim(),
-    route: $('route').value.trim(),
-    weather: $('weather').value.trim(),
-    companions: $('companions').value.trim(),
-    mood: $('mood').value.trim(),
-    note: $('note').value.trim(),
-    highlights: $('highlights').value.trim()
-  });
-  const clearTripDetails = () => {
-    ['place', 'route', 'weather', 'companions', 'mood', 'note', 'highlights'].forEach(id => $(id) && ($(id).value = ''));
-  };
-
   function streak() {
     const out = outsideDays(), rest = new Set(S.rest);
     const has = k => out.has(k) || rest.has(k);
@@ -277,17 +258,24 @@
     upd(); tick = setInterval(upd, 1000);
   }
 
+  function writeWalkNote(walk, end) {
+    const duration = Math.max(1, Math.round((end - walk.start) / 60000));
+    const sounds = soundText(walk.sounds).toLowerCase();
+    const steps = walk.steps ? walk.steps.toLocaleString() : '';
+    const location = walk.place ? ' at ' + walk.place : '';
+    const soundNote = sounds ? ' The local sound model picked up ' + sounds + '.' :
+      (walk.soundDetectionUnavailable ? ' Sound detection was unavailable during this walk.' : ' The sound model did not identify a clear environmental sound.');
+    const note = 'A ' + duration + '-minute walk' + location + '.' + soundNote +
+      (steps ? ' The phone counted about ' + steps + ' steps.' : '');
+    const highlights = sounds ? 'The standout sounds were ' + sounds + '.' :
+      (steps ? 'A ' + duration + '-minute break outdoors and about ' + steps + ' steps.' : 'A ' + duration + '-minute break outdoors.');
+    return { note, highlights };
+  }
+
   $('start').onclick = () => {
-    const details = tripDetails();
     S.active = {
       start: Date.now(),
-      place: details.place,
-      route: details.route,
-      weather: details.weather,
-      companions: details.companions,
-      mood: details.mood,
-      note: details.note,
-      highlights: details.highlights,
+      place: $('place').value.trim(),
       sounds: {},
       steps: 0
     };
@@ -295,22 +283,20 @@
   };
   $('end').onclick = () => {
     const a = S.active; if (!a) return;
-    const details = tripDetails();
+    const end = Date.now();
+    const generated = writeWalkNote(a, end);
     S.sessions.push({
       id: String(a.start),
       start: a.start,
-      end: Date.now(),
-      place: a.place || details.place,
-      route: a.route || details.route,
-      weather: a.weather || details.weather,
-      companions: a.companions || details.companions,
-      mood: a.mood || details.mood,
-      note: a.note || details.note,
-      highlights: a.highlights || details.highlights,
+      end,
+      place: a.place,
+      note: generated.note,
+      highlights: generated.highlights,
       sounds: a.sounds || {},
       steps: a.steps || 0
     });
-    S.active = null; clearTripDetails();
+    S.active = null;
+    $('place').value = '';
     clearInterval(tick); save(); render();
   };
   $('rest').onclick = () => { S.rest.push(dkey(new Date())); save(); render(); };
