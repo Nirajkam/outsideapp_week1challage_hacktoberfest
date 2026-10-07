@@ -39,6 +39,9 @@
     label{display:block;font-size:.85rem;color:var(--mute);margin:0 .5rem .35rem}
     input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:.85rem 1rem}
     textarea{min-height:5.5rem;resize:vertical}
+    .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
+    .detail-grid .full{grid-column:1/-1}
+    .detail-grid .field{display:flex;flex-direction:column}
     #idle .go,#live #end{margin-top:1rem}
     #where{font-size:1.05rem;color:var(--ink)}
     #where::before{content:"";display:inline-block;width:.6rem;height:.6rem;margin-right:.55rem;border-radius:50%;background:var(--sun);animation:pulse 1.6s infinite}
@@ -131,8 +134,14 @@
       <div id="heard" aria-live="polite"></div>
       <div class="sounds" id="top3" style="margin:.25rem .5rem 0"></div>
     </div>
-    <label for="note">What did you notice?</label>
-    <textarea id="note" placeholder="Birds, wind, a smell, a sound"></textarea>
+    <div class="detail-grid">
+      <div class="field"><label for="route">Route</label><input id="route" placeholder="River loop, forest trail, neighborhood"></div>
+      <div class="field"><label for="weather">Weather</label><input id="weather" placeholder="Clear, breezy, warm, rain"></div>
+      <div class="field"><label for="companions">Company</label><input id="companions" placeholder="Solo, with friends, dog"></div>
+      <div class="field"><label for="mood">Mood</label><input id="mood" placeholder="Calm, energized, reflective"></div>
+      <div class="field full"><label for="note">What did you notice?</label><textarea id="note" placeholder="Birds, wind, a smell, a sound"></textarea></div>
+      <div class="field full"><label for="highlights">Highlights</label><textarea id="highlights" placeholder="Best moment, scenic view, favorite sound, or a small win"></textarea></div>
+    </div>
     <p></p>
     <button class="go" id="end">I'm back</button>
   </section>
@@ -160,6 +169,18 @@
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
   const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
+  const tripDetails = () => ({
+    place: $('place').value.trim(),
+    route: $('route').value.trim(),
+    weather: $('weather').value.trim(),
+    companions: $('companions').value.trim(),
+    mood: $('mood').value.trim(),
+    note: $('note').value.trim(),
+    highlights: $('highlights').value.trim()
+  });
+  const clearTripDetails = () => {
+    ['place', 'route', 'weather', 'companions', 'mood', 'note', 'highlights'].forEach(id => $(id) && ($(id).value = ''));
+  };
 
   function streak() {
     const out = outsideDays(), rest = new Set(S.rest);
@@ -223,7 +244,14 @@
       const top = el('div', null, 'top');
       top.append(el('b', s.place || 'A walk outside'), el('span', mins(s) + ' min' + (s.steps ? ' \u00b7 ' + s.steps.toLocaleString() + ' steps' : ''), 'sounds'));
       body.append(top);
+      const details = [];
+      if (s.route) details.push('Route: ' + s.route);
+      if (s.weather) details.push('Weather: ' + s.weather);
+      if (s.companions) details.push('Company: ' + s.companions);
+      if (s.mood) details.push('Mood: ' + s.mood);
+      if (details.length) body.append(el('p', details.join(' • ')));
       if (s.note) body.append(el('p', s.note));
+      if (s.highlights) body.append(el('p', 'Highlights: ' + s.highlights));
       const keys = Object.keys(s.sounds || {});
       if (keys.length) {
         const chips = el('div', null, 'chips');
@@ -250,13 +278,39 @@
   }
 
   $('start').onclick = () => {
-    S.active = { start: Date.now(), place: $('place').value.trim(), sounds: {}, steps: 0 };
+    const details = tripDetails();
+    S.active = {
+      start: Date.now(),
+      place: details.place,
+      route: details.route,
+      weather: details.weather,
+      companions: details.companions,
+      mood: details.mood,
+      note: details.note,
+      highlights: details.highlights,
+      sounds: {},
+      steps: 0
+    };
     save(); render(); runTimer();
   };
   $('end').onclick = () => {
     const a = S.active; if (!a) return;
-    S.sessions.push({ id: String(a.start), start: a.start, end: Date.now(), place: a.place, note: $('note').value.trim(), sounds: a.sounds || {}, steps: a.steps || 0 });
-    S.active = null; $('note').value = ''; $('place').value = '';
+    const details = tripDetails();
+    S.sessions.push({
+      id: String(a.start),
+      start: a.start,
+      end: Date.now(),
+      place: a.place || details.place,
+      route: a.route || details.route,
+      weather: a.weather || details.weather,
+      companions: a.companions || details.companions,
+      mood: a.mood || details.mood,
+      note: a.note || details.note,
+      highlights: a.highlights || details.highlights,
+      sounds: a.sounds || {},
+      steps: a.steps || 0
+    });
+    S.active = null; clearTripDetails();
     clearInterval(tick); save(); render();
   };
   $('rest').onclick = () => { S.rest.push(dkey(new Date())); save(); render(); };
@@ -270,13 +324,18 @@
 
   function journalText() {
     const total = S.sessions.reduce((a, s) => a + mins(s), 0);
-    const head = 'OUTSIDE JOURNAL\n' + S.sessions.length + ' walks, ' + total + ' min outside\n\n';
+    const head = 'OUTSIDE JOURNAL\n' + S.sessions.length + ' trips, ' + total + ' min outside\n\n';
     return head + [...S.sessions].reverse().map(s => {
       const d = new Date(s.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
       const lines = [d + ' \u00b7 ' + mins(s) + ' min' + (s.steps ? ' \u00b7 ~' + s.steps.toLocaleString() + ' steps' : '')];
       if (s.place) lines.push('Place: ' + s.place);
+      if (s.route) lines.push('Route: ' + s.route);
+      if (s.weather) lines.push('Weather: ' + s.weather);
+      if (s.companions) lines.push('Company: ' + s.companions);
+      if (s.mood) lines.push('Mood: ' + s.mood);
       if (soundText(s.sounds)) lines.push('Heard: ' + soundText(s.sounds));
-      if (s.note) lines.push(s.note);
+      if (s.note) lines.push('Notes: ' + s.note);
+      if (s.highlights) lines.push('Highlights: ' + s.highlights);
       return lines.join('\n');
     }).join('\n\n');
   }

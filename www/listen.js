@@ -13,8 +13,20 @@
   async function load() {
     if (model) return;
     say('Loading the sound model (first time only)...');
-    meta = await (await fetch('model/labels.json')).json();
-    model = await tf.loadGraphModel('model/yamnet/model.json');
+    try {
+      meta = await (await fetch('model/labels.json')).json();
+      if (!window.tf || typeof window.tf.loadGraphModel !== 'function') {
+        throw new Error('TensorFlow.js is unavailable in this browser.');
+      }
+      const graph = await tf.loadGraphModel('model/yamnet/model.json');
+      model = graph;
+    } catch (error) {
+      console.warn('Sound recognition is unavailable in this build:', error);
+      model = 'unavailable';
+      say('Sound recognition is unavailable on this device. Your trip details are still saved.');
+      label('Sound detection unavailable');
+      throw error;
+    }
   }
 
   function resample(raw, inRate) {
@@ -62,6 +74,7 @@
     starting = true;
     try {
       await load();
+      if (model === 'unavailable') return;
       stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });

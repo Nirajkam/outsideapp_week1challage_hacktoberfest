@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "python3 -m http.server 4173 --directory www",
+    "test": "node --check www/steps.js && node --check www/listen.js"
   },
   "keywords": [],
   "author": "",
