@@ -1,70 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1d3b34">
-<title>Outside</title>
-<style>
-:root{
-  --bg:#e9eef0; --ink:#17302a; --mute:#5d716b; --line:#c5d1d3;
-  --btn:#1d3b34; --btn-ink:#f2f7f4; --sun:#c8892b; --dot:#cfdadc;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--bg:#0f1b19;--ink:#e3ede8;--mute:#92a8a1;--line:#27403b;--btn:#d8e8df;--btn-ink:#0f1b19;--sun:#e0a248;--dot:#223632}
-}
-:root[data-theme="dark"]{--bg:#0f1b19;--ink:#e3ede8;--mute:#92a8a1;--line:#27403b;--btn:#d8e8df;--btn-ink:#0f1b19;--sun:#e0a248;--dot:#223632}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:30rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
-h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:400;margin:0}
-.hero{text-align:left;padding:1rem 0 .5rem}
-.num{font:400 6.5rem/1 Georgia,"Times New Roman",serif;letter-spacing:-.03em}
-.unit{font-size:1.15rem;color:var(--mute);margin-top:.25rem}
-.week{display:flex;justify-content:space-between;align-items:flex-end;margin:1.5rem 0 .25rem;border-bottom:2px solid var(--ink);padding-bottom:.6rem}
-.day{display:flex;flex-direction:column;align-items:center;gap:.35rem;font-size:.8rem;color:var(--mute);width:2.4rem}
-.dot{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--dot)}
-.dot.on{background:var(--sun)}
-.dot.rest{background:transparent;border:2px dashed var(--mute)}
-.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.9rem;margin:.5rem 0 1.75rem}
-button{font:inherit;cursor:pointer}
-.go{width:100%;padding:1.1rem;border:0;border-radius:.6rem;background:var(--btn);color:var(--btn-ink);font-size:1.2rem;font-weight:600}
-.link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:.25rem 0}
-.link:disabled{opacity:.4;text-decoration:none;cursor:default}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
-label{display:block;font-size:.9rem;color:var(--mute);margin:1rem 0 .25rem}
-input,textarea{width:100%;font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);padding:.5rem 0;border-radius:0}
-textarea{min-height:5rem;resize:vertical}
-.timer{font:400 3rem/1 Georgia,serif;margin:.5rem 0}
-h2{font-size:1.5rem;margin:2.5rem 0 .5rem}
-.entry{border-top:1px solid var(--line);padding:1rem 0}
-.entry .top{display:flex;justify-content:space-between;gap:1rem}
-.entry b{font-family:Georgia,serif;font-weight:400;font-size:1.1rem}
-.entry p{margin:.35rem 0;white-space:pre-wrap}
-.sounds{color:var(--mute);font-size:.9rem}
-.empty{color:var(--mute);border-top:1px solid var(--line);padding:1rem 0}
-.listen{margin:1.25rem 0 0}
-.listen .go{background:transparent;color:var(--ink);border:2px solid var(--ink);font-size:1rem;padding:.8rem}
-.listen .go:disabled{opacity:.5;cursor:default}
-#heard{color:var(--mute);margin:.5rem 0 0;min-height:1.5rem}
-[hidden]{display:none!important}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d3b34">
+  <title>Outside</title>
+  <style>
+    :root{--bg:#eef2f1;--ink:#12302a;--mute:#5b706a;--line:#d3ddda;--panel:#ffffffd9;--btn:#12302a;--btn-ink:#f4f8f5;--sun:#e39b3b;--chip:#dcebe4;--dot:#d6e0dd;--sky1:#cfe3ee;--sky2:#f6e6d0;--hill1:#a9c8b8;--hill2:#79a591;--hill3:#4a7d68;--shadow:rgba(18,48,42,.14);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+    @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1519;--ink:#e8f0ec;--mute:#93a9a2;--line:#22363a;--panel:#14232ae6;--btn:#e8f0ec;--btn-ink:#0b1519;--sun:#f0ae55;--chip:#1c3a33;--dot:#1d3036;--sky1:#10222e;--sky2:#2b2f3f;--hill1:#1c3d3b;--hill2:#14302f;--hill3:#0e2523;--shadow:rgba(0,0,0,.45)}}
+    :root[data-theme="dark"]{--bg:#0b1519;--ink:#e8f0ec;--mute:#93a9a2;--line:#22363a;--panel:#14232ae6;--btn:#e8f0ec;--btn-ink:#0b1519;--sun:#f0ae55;--chip:#1c3a33;--dot:#1d3036;--sky1:#10222e;--sky2:#2b2f3f;--hill1:#1c3d3b;--hill2:#14302f;--hill3:#0e2523;--shadow:rgba(0,0,0,.45)}
+    html{scroll-padding-top:env(safe-area-inset-top,0px)}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{max-width:30rem;margin:0 auto;padding:1rem 1rem 4rem}
+    h2{font:400 1.6rem/1.2 "Iowan Old Style",Palatino,Georgia,serif;margin:2.5rem .25rem .75rem}
+    .hero{position:relative;overflow:hidden;border-radius:1.75rem;padding:1.5rem 1.5rem 7.5rem;background:linear-gradient(170deg,var(--sky1),var(--sky2))}
+    .hero::before{content:"";position:absolute;right:1.6rem;top:1.5rem;width:3rem;height:3rem;border-radius:50%;background:var(--orb);box-shadow:0 0 2.2rem .6rem color-mix(in srgb,var(--orb) 45%,transparent)}
+    .brand{position:relative;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--hero-mute)}
+    .num{font:800 5.5rem/.9 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:-.04em;color:var(--hero-ink)}
+    .unit{position:relative;font-size:1.1rem;color:var(--hero-mute)}
+    .hills{position:absolute;left:0;bottom:0;width:100%;height:6.5rem}
+    .h1{fill:var(--hill1)}.h2{fill:var(--hill2)}.h3{fill:var(--hill3)}
+    .panel{position:relative;margin:-4.25rem 1rem 0;padding:1rem 1rem .5rem;background:var(--panel);backdrop-filter:blur(10px);border-radius:1.25rem;box-shadow:0 10px 30px var(--shadow)}
+    .week{display:flex;justify-content:space-between}
+    .day{display:flex;flex-direction:column;align-items:center;gap:.35rem;font-size:.75rem;color:var(--mute);width:2.4rem}
+    .day.today span{color:var(--ink);font-weight:700}
+    .dot{width:1.6rem;height:1.6rem;border-radius:50%;background:var(--dot)}
+    .dot.on{background:var(--sun);box-shadow:0 0 0 .25rem color-mix(in srgb,var(--sun) 25%,transparent)}
+    .dot.rest{background:transparent;border:2px dashed var(--mute)}
+    .meta{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:.85rem;margin-top:.5rem;padding-top:.4rem;border-top:1px solid var(--line)}
+    button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .go{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:1.1rem;border:0;border-radius:999px;background:var(--btn);color:var(--btn-ink);font-size:1.15rem;font-weight:600;box-shadow:0 8px 20px var(--shadow);transition:transform .12s}
+    .go:active{transform:scale(.98)}
+    .link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:.35rem 0}
+    .link:disabled{opacity:.4;text-decoration:none;cursor:default}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+    #idle,#live{margin-top:1.5rem}
+    label{display:block;font-size:.85rem;color:var(--mute);margin:0 .5rem .35rem}
+    input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:.85rem 1rem}
+    textarea{min-height:5.5rem;resize:vertical}
+    #idle .go,#live #end{margin-top:1rem}
+    #where{font-size:1.05rem;color:var(--ink)}
+    #where::before{content:"";display:inline-block;width:.6rem;height:.6rem;margin-right:.55rem;border-radius:50%;background:var(--sun);animation:pulse 1.6s infinite}
+    .timer{font:400 3.6rem/1.1 "Iowan Old Style",Palatino,Georgia,serif;margin:.25rem 0 1rem;font-variant-numeric:tabular-nums}
+    .listen{margin:0 0 1.25rem}
+    .listen .go{background:transparent;color:var(--ink);border:2px solid var(--ink);box-shadow:none;font-size:1rem;padding:.85rem}
+    #listen.on{animation:ring 1.4s infinite}
+    #heard{color:var(--mute);margin:.6rem .5rem 0;min-height:1.5rem}
+    .entry{display:flex;gap:1rem;padding:1rem;margin-bottom:.75rem;background:var(--panel);border-radius:1.25rem}
+    .date{display:flex;flex-direction:column;align-items:center;min-width:2.6rem}
+    .date b{font:400 1.9rem/1 "Iowan Old Style",Palatino,Georgia,serif}
+    .date span{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+    .body{flex:1;min-width:0}
+    .top{display:flex;justify-content:space-between;gap:.75rem}
+    .top b{font-weight:600}
+    .body p{margin:.35rem 0;white-space:pre-wrap;overflow-wrap:anywhere}
+    .sounds{color:var(--mute);font-size:.85rem}
+    .chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0 .25rem}
+    .chip{background:var(--chip);border-radius:999px;padding:.15rem .7rem;font-size:.8rem}
+    .empty{color:var(--mute);padding:1.25rem;background:var(--panel);border-radius:1.25rem}
+    @keyframes pulse{50%{opacity:.35}}
+    @keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sun) 60%,transparent)}100%{box-shadow:0 0 0 .9rem transparent}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    :root{--hero-ink:#12302a;--hero-mute:#46605a;--orb:#ffd25a}
+    .streakrow{position:relative;display:flex;align-items:flex-end;gap:.6rem;margin-top:.9rem}
+    .flame{width:4.4rem;height:5.5rem;scale:var(--f,1);transform-origin:50% 100%;filter:drop-shadow(0 0 .8rem rgba(255,110,20,.8));animation:flicker 1.1s ease-in-out infinite}
+    .flame .inner{transform-box:fill-box;transform-origin:50% 100%;animation:flicker2 .75s ease-in-out infinite}
+    .flame.out{filter:grayscale(1) opacity(.45);animation:none}
+    .flame.out .inner{animation:none}
+    .stepsline{color:var(--mute);margin:-.5rem .5rem 1rem}
+    .jhead{display:flex;justify-content:space-between;align-items:baseline;margin:2.5rem .25rem .75rem}
+    .jhead h2{margin:0}
+    .exportbox textarea{min-height:12rem;font:.85rem/1.5 ui-monospace,Menlo,monospace}
+    .exportbtns{display:flex;gap:.5rem;margin:.75rem 0 1rem}
+    .exportbtns .go{flex:1;width:auto;padding:.7rem;font-size:.95rem;box-shadow:none}
+    .go.alt{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+    @keyframes flicker{0%,100%{transform:rotate(-2deg) scale(1,1)}25%{transform:rotate(2deg) scale(1.04,.96)}50%{transform:rotate(-1deg) scale(.96,1.06)}75%{transform:rotate(1.5deg) scale(1.03,.98)}}
+    @keyframes flicker2{0%,100%{transform:scale(1,1)}50%{transform:scale(.88,1.1)}}
+    :root[data-time="dawn"]{--sky1:#9fbce6;--sky2:#f8cfb5;--orb:#ffe0a3}
+    :root[data-time="day"]{--sky1:#7fc0ee;--sky2:#d9f0fb;--orb:#ffd84d}
+    :root[data-time="golden"]{--sky1:#ee9a55;--sky2:#fbd8a0;--hero-ink:#3a2412;--hero-mute:#6b4a2c;--orb:#fff0b0;--hill1:#b9a56a;--hill2:#7f8f55;--hill3:#4d6b45}
+    :root[data-time="dusk"]{--sky1:#35346f;--sky2:#d0788d;--hero-ink:#fbeff2;--hero-mute:#e4c3d0;--orb:#ffd7c2;--hill1:#4a4a86;--hill2:#2f3a6a;--hill3:#1f2c4f}
+    :root[data-time="night"]{--sky1:#070d26;--sky2:#243060;--hero-ink:#eef1ff;--hero-mute:#a9b4e0;--orb:#e8ecff;--hill1:#1c2a55;--hill2:#13204a;--hill3:#0c1638}
+    @media (prefers-reduced-motion:reduce){.flame,.flame .inner{animation:none!important}}
+    [hidden]{display:none!important}
+  </style>
 </head>
 <body>
 <main>
   <section class="hero" aria-live="polite">
-    <div class="num" id="streak">0</div>
+    <div class="brand" id="greet">Outside</div>
+    <div class="streakrow">
+      <svg class="flame out" id="flame" viewBox="0 0 64 80" aria-hidden="true">
+        <defs><linearGradient id="fo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff2d00"/><stop offset=".6" stop-color="#ff7a00"/><stop offset="1" stop-color="#ffb800"/></linearGradient>
+          <linearGradient id="fi" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb300"/><stop offset="1" stop-color="#fff3a0"/></linearGradient></defs>
+        <path d="M32 2C34 18 52 26 52 50C52 66 43 78 32 78C21 78 12 66 12 50C12 40 17 34 22 28C22 36 26 40 29 40C26 28 28 14 32 2Z" fill="url(#fo)"/>
+        <path class="inner" d="M32 36C33 46 42 50 42 60C42 69 37 75 32 75C27 75 22 69 22 60C22 52 28 48 32 36Z" fill="url(#fi)"/>
+      </svg>
+      <div class="num" id="streak">0</div>
+    </div>
     <div class="unit" id="unit">days outside in a row</div>
+    <svg class="hills" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="h1" d="M0 55 C70 20 130 70 210 42 S340 15 400 45 V100 H0Z"/>
+      <path class="h2" d="M0 72 C80 45 150 90 230 62 S350 40 400 66 V100 H0Z"/>
+      <path class="h3" d="M0 88 C90 70 160 100 250 82 S360 70 400 86 V100 H0Z"/>
+    </svg>
   </section>
 
-  <div class="week" id="week" aria-label="Last 7 days"></div>
-  <div class="meta">
-    <span id="tokens"></span>
-    <button class="link" id="rest">Take a rest day</button>
-  </div>
+  <section class="panel">
+    <div class="week" id="week" aria-label="Last 7 days"></div>
+    <div class="meta">
+      <span id="tokens"></span>
+      <button class="link" id="rest">Take a rest day</button>
+    </div>
+  </section>
 
   <section id="idle">
     <label for="place">Where are you going?</label>
@@ -76,9 +125,11 @@ h2{font-size:1.5rem;margin:2.5rem 0 .5rem}
   <section id="live" hidden>
     <div class="unit" id="where"></div>
     <div class="timer" id="timer">0:00</div>
+    <div class="stepsline" id="steps">0 steps</div>
     <div class="listen">
-      <button class="go" id="listen">Listen for 10 seconds</button>
+      <button class="go on" id="listen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="listenlabel">Starting to listen...</span></button>
       <div id="heard" aria-live="polite"></div>
+      <div class="sounds" id="top3" style="margin:.25rem .5rem 0"></div>
     </div>
     <label for="note">What did you notice?</label>
     <textarea id="note" placeholder="Birds, wind, a smell, a sound"></textarea>
@@ -86,115 +137,170 @@ h2{font-size:1.5rem;margin:2.5rem 0 .5rem}
     <button class="go" id="end">I'm back</button>
   </section>
 
-  <h2>Journal</h2>
+  <div class="jhead"><h2>Journal</h2><button class="link" id="export">Export as text</button></div>
+  <section id="exportbox" hidden>
+    <textarea id="exporttext" readonly aria-label="Journal as text"></textarea>
+    <div class="exportbtns">
+      <button class="go" id="copy">Copy</button>
+      <button class="go alt" id="share">Share</button>
+      <button class="go alt" id="savetxt">Save .txt</button>
+    </div>
+  </section>
   <div id="journal"></div>
 </main>
 
 <script>
-const KEY = 'outside:v1';
-let S = { sessions: [], rest: [], active: null };
-try { const r = localStorage.getItem(KEY); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const KEY = 'outside:v1';
+  let S = { sessions: [], rest: [], active: null };
+  try { const r = localStorage.getItem(KEY); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
-const $ = id => document.getElementById(id);
-const dkey = d => new Date(d).toLocaleDateString('sv-SE');
-const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
-const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
+  const $ = id => document.getElementById(id);
+  const dkey = d => new Date(d).toLocaleDateString('sv-SE');
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
+  const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
 
-function streak() {
-  const out = outsideDays(), rest = new Set(S.rest);
-  const has = k => out.has(k) || rest.has(k);
-  let d = new Date(), n = 0;
-  if (!has(dkey(d))) d = addDays(d, -1);   // today not done yet: streak still alive
-  while (has(dkey(d))) { n++; d = addDays(d, -1); }
-  return n;
-}
-const tokens = () => Math.max(0, Math.floor(outsideDays().size / 7) - S.rest.length);
+  function streak() {
+    const out = outsideDays(), rest = new Set(S.rest);
+    const has = k => out.has(k) || rest.has(k);
+    let d = new Date(), n = 0;
+    if (!has(dkey(d))) d = addDays(d, -1);   // today not done yet: streak still alive
+    while (has(dkey(d))) { n++; d = addDays(d, -1); }
+    return n;
+  }
+  const tokens = () => Math.max(0, Math.floor(outsideDays().size / 7) - S.rest.length);
 
-const SOUND_LABELS = { birds: 'Birds', wind: 'Wind and leaves', water: 'Water', traffic: 'Traffic', voices: 'Voices', animals: 'Animals', bells: 'Bells', footsteps: 'Footsteps' };
-const soundText = o => Object.keys(o || {}).map(k => SOUND_LABELS[k] || k).join(', ');
+  const SOUND_LABELS = { birds: 'Birds', wind: 'Wind and leaves', water: 'Water', traffic: 'Traffic', voices: 'Voices', animals: 'Animals', bells: 'Bells', footsteps: 'Footsteps' };
+  const soundText = o => Object.keys(o || {}).map(k => SOUND_LABELS[k] || k).join(', ');
 
-function el(tag, text, cls) {
-  const e = document.createElement(tag);
-  if (text != null) e.textContent = text;
-  if (cls) e.className = cls;
-  return e;
-}
-
-function render() {
-  const n = streak();
-  $('streak').textContent = n;
-  $('unit').textContent = n === 1 ? 'day outside in a row' : 'days outside in a row';
-
-  const out = outsideDays(), rest = new Set(S.rest);
-  const week = $('week'); week.replaceChildren();
-  for (let i = 6; i >= 0; i--) {
-    const d = addDays(new Date(), -i), k = dkey(d);
-    const day = el('div', null, 'day');
-    day.append(el('div', null, 'dot' + (out.has(k) ? ' on' : rest.has(k) ? ' rest' : '')));
-    day.append(el('span', d.toLocaleDateString(undefined, { weekday: 'narrow' })));
-    week.append(day);
+  function el(tag, text, cls) {
+    const e = document.createElement(tag);
+    if (text != null) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
   }
 
-  const t = tokens();
-  $('tokens').textContent = t === 1 ? '1 rest day saved' : t + ' rest days saved';
-  const todayDone = out.has(dkey(new Date())) || rest.has(dkey(new Date()));
-  $('rest').disabled = t < 1 || todayDone;
+  function render() {
+    const n = streak();
+    $('streak').textContent = n;
+    $('flame').classList.toggle('out', n === 0);
+    $('flame').style.setProperty('--f', Math.min(1 + n * 0.02, 1.35));
+    $('unit').textContent = n === 1 ? 'day outside in a row' : 'days outside in a row';
 
-  $('idle').hidden = !!S.active;
-  $('live').hidden = !S.active;
-  if (S.active) {
-    $('where').textContent = S.active.place ? 'Out at ' + S.active.place : 'Out and about';
-    $('heard').textContent = soundText(S.active.sounds) ? 'This walk: ' + soundText(S.active.sounds) : '';
+    const out = outsideDays(), rest = new Set(S.rest);
+    const week = $('week'); week.replaceChildren();
+    for (let i = 6; i >= 0; i--) {
+      const d = addDays(new Date(), -i), k = dkey(d);
+      const day = el('div', null, 'day' + (i === 0 ? ' today' : ''));
+      day.append(el('div', null, 'dot' + (out.has(k) ? ' on' : rest.has(k) ? ' rest' : '')));
+      day.append(el('span', d.toLocaleDateString(undefined, { weekday: 'narrow' })));
+      week.append(day);
+    }
+
+    const t = tokens();
+    $('tokens').textContent = t === 1 ? '1 rest day saved' : t + ' rest days saved';
+    const todayDone = out.has(dkey(new Date())) || rest.has(dkey(new Date()));
+    $('rest').disabled = t < 1 || todayDone;
+
+    $('idle').hidden = !!S.active;
+    $('live').hidden = !S.active;
+    if (S.active) {
+      $('where').textContent = S.active.place ? 'Out at ' + S.active.place : 'Out and about';
+      $('heard').textContent = soundText(S.active.sounds) ? 'This walk: ' + soundText(S.active.sounds) : '';
+    }
+
+    const j = $('journal'); j.replaceChildren();
+    if (!S.sessions.length) {
+      j.append(el('div', 'Your walks will show up here. Start with five minutes.', 'empty'));
+    }
+    [...S.sessions].reverse().forEach(s => {
+      const d = new Date(s.start);
+      const row = el('div', null, 'entry');
+      const date = el('div', null, 'date');
+      date.append(el('b', d.getDate()), el('span', d.toLocaleDateString(undefined, { month: 'short' })));
+      const body = el('div', null, 'body');
+      const top = el('div', null, 'top');
+      top.append(el('b', s.place || 'A walk outside'), el('span', mins(s) + ' min' + (s.steps ? ' \u00b7 ' + s.steps.toLocaleString() + ' steps' : ''), 'sounds'));
+      body.append(top);
+      if (s.note) body.append(el('p', s.note));
+      const keys = Object.keys(s.sounds || {});
+      if (keys.length) {
+        const chips = el('div', null, 'chips');
+        keys.forEach(k => chips.append(el('span', SOUND_LABELS[k] || k, 'chip')));
+        body.append(chips);
+      }
+      const del = el('button', 'Delete', 'link');
+      del.onclick = () => { if (confirm('Delete this entry?')) { S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
+      body.append(del);
+      row.append(date, body);
+      j.append(row);
+    });
   }
 
-  const j = $('journal'); j.replaceChildren();
-  if (!S.sessions.length) {
-    j.append(el('div', 'Your walks will show up here. Start with five minutes.', 'empty'));
+  let tick = null;
+  function runTimer() {
+    clearInterval(tick);
+    if (!S.active) return;
+    const upd = () => {
+      const sec = Math.floor((Date.now() - S.active.start) / 1000);
+      $('timer').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    };
+    upd(); tick = setInterval(upd, 1000);
   }
-  [...S.sessions].reverse().forEach(s => {
-    const row = el('div', null, 'entry');
-    const top = el('div', null, 'top');
-    top.append(el('b', new Date(s.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })));
-    top.append(el('span', mins(s) + ' min', 'sounds'));
-    row.append(top);
-    if (s.place) row.append(el('div', s.place, 'sounds'));
-    if (soundText(s.sounds)) row.append(el('div', 'Heard: ' + soundText(s.sounds), 'sounds'));
-    if (s.note) row.append(el('p', s.note));
-    const del = el('button', 'Delete', 'link');
-    del.onclick = () => { if (confirm('Delete this entry?')) { S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
-    row.append(del);
-    j.append(row);
-  });
-}
 
-let tick = null;
-function runTimer() {
-  clearInterval(tick);
-  if (!S.active) return;
-  const upd = () => {
-    const sec = Math.floor((Date.now() - S.active.start) / 1000);
-    $('timer').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  $('start').onclick = () => {
+    S.active = { start: Date.now(), place: $('place').value.trim(), sounds: {}, steps: 0 };
+    save(); render(); runTimer();
   };
-  upd(); tick = setInterval(upd, 1000);
-}
+  $('end').onclick = () => {
+    const a = S.active; if (!a) return;
+    S.sessions.push({ id: String(a.start), start: a.start, end: Date.now(), place: a.place, note: $('note').value.trim(), sounds: a.sounds || {}, steps: a.steps || 0 });
+    S.active = null; $('note').value = ''; $('place').value = '';
+    clearInterval(tick); save(); render();
+  };
+  $('rest').onclick = () => { S.rest.push(dkey(new Date())); save(); render(); };
 
-$('start').onclick = () => {
-  S.active = { start: Date.now(), place: $('place').value.trim(), sounds: {} };
-  save(); render(); runTimer();
-};
-$('end').onclick = () => {
-  const a = S.active; if (!a) return;
-  S.sessions.push({ id: String(a.start), start: a.start, end: Date.now(), place: a.place, note: $('note').value.trim(), sounds: a.sounds || {} });
-  S.active = null; $('note').value = ''; $('place').value = '';
-  clearInterval(tick); save(); render();
-};
-$('rest').onclick = () => { S.rest.push(dkey(new Date())); save(); render(); };
+  function applyTime() {
+    const h = new Date().getHours();
+    const auto = h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'golden' : h >= 19 && h < 21 ? 'dusk' : 'night';
+    document.documentElement.dataset.time = new URLSearchParams(location.search).get('time') || auto;  // ?time=night to preview
+    $('greet').textContent = 'Outside \u00b7 ' + (h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good night');
+  }
 
-render(); runTimer();
+  function journalText() {
+    const total = S.sessions.reduce((a, s) => a + mins(s), 0);
+    const head = 'OUTSIDE JOURNAL\n' + S.sessions.length + ' walks, ' + total + ' min outside\n\n';
+    return head + [...S.sessions].reverse().map(s => {
+      const d = new Date(s.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      const lines = [d + ' \u00b7 ' + mins(s) + ' min' + (s.steps ? ' \u00b7 ~' + s.steps.toLocaleString() + ' steps' : '')];
+      if (s.place) lines.push('Place: ' + s.place);
+      if (soundText(s.sounds)) lines.push('Heard: ' + soundText(s.sounds));
+      if (s.note) lines.push(s.note);
+      return lines.join('\n');
+    }).join('\n\n');
+  }
+  $('export').onclick = () => { const b = $('exportbox'); b.hidden = !b.hidden; if (!b.hidden) $('exporttext').value = journalText(); };
+  $('copy').onclick = async () => {
+    const t = $('exporttext');
+    try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); }
+    $('copy').textContent = 'Copied'; setTimeout(() => { $('copy').textContent = 'Copy'; }, 1500);
+  };
+  $('share').onclick = async () => {
+    if (navigator.share) { try { await navigator.share({ title: 'My Outside journal', text: $('exporttext').value }); } catch (e) {} }
+    else { $('share').textContent = 'Not available'; }
+  };
+  $('savetxt').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([$('exporttext').value], { type: 'text/plain' }));
+    a.download = 'outside-journal.txt'; a.click();
+  };
+
+  applyTime(); setInterval(applyTime, 60000);
+  render(); runTimer();
 </script>
 <script src="lib/tf.min.js"></script>
 <script src="listen.js"></script>
+<script src="steps.js"></script>
 </body>
 </html>
