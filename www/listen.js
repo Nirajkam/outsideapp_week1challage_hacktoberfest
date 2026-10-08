@@ -74,13 +74,16 @@
     if (running || starting) return;
     starting = true;
     try {
-      await load();
-      if (model === 'unavailable') return;
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const audioReady = ctx.resume();
       stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
+      await audioReady;
+      if (ctx.state !== 'running') throw new Error('Audio is paused by the browser. Tap to retry.');
+      await load();
+      if (model === 'unavailable') { stop(); starting = false; return; }
       try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}   // keep screen on so listening continues
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
       src = ctx.createMediaStreamSource(stream);
       proc = ctx.createScriptProcessor(4096, 1, 1);
       let chunks = [], got = 0, busy = false;
@@ -108,6 +111,8 @@
     starting = false;
   }
 
+  document.addEventListener('outside:start-listening', start);
+
   function stop() {
     running = false;
     try { proc && proc.disconnect(); src && src.disconnect(); } catch (e) {}
@@ -120,6 +125,7 @@
   $('listen').onclick = () => {
     userPaused = !userPaused;
     if (userPaused) { stop(); label('Listening paused. Tap to resume'); }
+    else start();
   };
 
   setInterval(() => {                       // start with the walk, stop when it ends

@@ -16,8 +16,22 @@
     else if (v < THRESH * 0.4) up = false;
   }
 
+  function enableMotion() {
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          window.addEventListener('devicemotion', onMotion);
+          on = true;
+        }
+      }).catch(console.error);
+    } else {
+      window.addEventListener('devicemotion', onMotion);
+      on = true;
+    }
+  }
+
   setInterval(() => {
-    if (S.active && !on) { window.addEventListener('devicemotion', onMotion); on = true; }
+    if (S.active && !on) { enableMotion(); }
     if (!S.active && on) { window.removeEventListener('devicemotion', onMotion); on = false; }
     if (S.active) {
       const n = S.active.steps || 0;

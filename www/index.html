@@ -154,14 +154,21 @@
 
 <script>
   const KEY = 'outside:v1';
-  let S = { sessions: [], rest: [], active: null };
+  let S = { sessions: [], rest: [], active: null, walkDays: [] };
   try { const r = localStorage.getItem(KEY); if (r) S = Object.assign(S, JSON.parse(r)); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   const $ = id => document.getElementById(id);
   const dkey = d => new Date(d).toLocaleDateString('sv-SE');
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  const outsideDays = () => new Set(S.sessions.map(s => dkey(s.start)));
+  const outsideDays = () => new Set([
+    ...(Array.isArray(S.walkDays) ? S.walkDays : []),
+    ...S.sessions.map(s => dkey(s.start))
+  ]);
+  const recordWalkDay = start => {
+    const days = Array.isArray(S.walkDays) ? S.walkDays : [];
+    S.walkDays = [...new Set([...days, dkey(start)])];
+  };
   const mins = s => Math.max(1, Math.round((s.end - s.start) / 60000));
   function streak() {
     const out = outsideDays(), rest = new Set(S.rest);
@@ -240,7 +247,7 @@
         body.append(chips);
       }
       const del = el('button', 'Delete', 'link');
-      del.onclick = () => { if (confirm('Delete this entry?')) { S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
+      del.onclick = () => { if (confirm('Delete this entry?')) { recordWalkDay(s.start); S.sessions = S.sessions.filter(x => x.id !== s.id); save(); render(); } };
       body.append(del);
       row.append(date, body);
       j.append(row);
@@ -280,11 +287,13 @@
       steps: 0
     };
     save(); render(); runTimer();
+    document.dispatchEvent(new Event('outside:start-listening'));
   };
   $('end').onclick = () => {
     const a = S.active; if (!a) return;
     const end = Date.now();
     const generated = writeWalkNote(a, end);
+    recordWalkDay(a.start);
     S.sessions.push({
       id: String(a.start),
       start: a.start,
@@ -345,7 +354,7 @@
   render(); runTimer();
 </script>
 <script src="lib/tf.min.js"></script>
-<script src="listen.js"></script>
+<script src="listen.js?v=3"></script>
 <script src="steps.js"></script>
 </body>
 </html>
