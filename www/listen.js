@@ -1,8 +1,18 @@
 // Automatic listening while a walk is active. YAMNet (Apache-2.0) + TensorFlow.js, fully on-device.
 // Audio stays in memory for a few seconds, is classified, then discarded. Only labels are saved.
 (() => {
-  const WINDOW_S = 5, RATE = 16000;
-  const MIN = { water: 0.12, wind: 0.25, traffic: 0.25 };      // detection bar per group (default 0.3)
+  const WINDOW_S = 3, RATE = 16000;
+  const MIN = {
+    voices: 0.08,
+    birds: 0.12,
+    wind: 0.15,
+    water: 0.12,
+    traffic: 0.15,
+    animals: 0.12,
+    bells: 0.12,
+    footsteps: 0.12
+  };                                                           // detection thresholds
+  const DEFAULT_MIN = 0.15;
   const STEADY = new Set(['water', 'wind', 'traffic']);        // steady sounds: use the average over the window
   let model = null, meta = null, running = false, starting = false, userPaused = false;
   let stream = null, ctx = null, src = null, proc = null, wake = null;
@@ -39,6 +49,21 @@
     return out;
   }
 
+  function normalize(wave) {
+    let max = 0;
+    for (let i = 0; i < wave.length; i++) {
+      const abs = Math.abs(wave[i]);
+      if (abs > max) max = abs;
+    }
+    if (max > 0.002 && max < 0.4) {
+      const scale = 0.5 / max;
+      const out = new Float32Array(wave.length);
+      for (let i = 0; i < wave.length; i++) out[i] = wave[i] * scale;
+      return out;
+    }
+    return wave;
+  }
+
   function classify(wave) {
     return tf.tidy(() => {
       const out = model.predict(tf.tensor1d(wave));
@@ -51,23 +76,25 @@
   function found(r) {
     return Object.entries(meta.groups)
       .map(([key, ids]) => ({ key, score: Math.max(...ids.map(i => (STEADY.has(key) ? r.mean : r.max)[i])) }))
-      .filter(g => g.score >= (MIN[g.key] || 0.3))
+      .filter(g => g.score >= (MIN[g.key] || DEFAULT_MIN))
       .sort((a, b) => b.score - a.score);
   }
 
   async function handle(raw, inRate) {
-    const r = classify(resample(raw, inRate));
+    const resampled = resample(raw, inRate);
+    const normalized = normalize(resampled);
+    const r = classify(normalized);
     const hits = found(r);
     if (S.active) {
       S.active.sounds = S.active.sounds || {};
       hits.forEach(g => { S.active.sounds[g.key] = (S.active.sounds[g.key] || 0) + 1; });
       save();
     }
-    const now = hits.length ? hits.map(g => SOUND_LABELS[g.key]).join(', ') : 'nothing clear';
+    const now = hits.length ? hits.map(g => SOUND_LABELS[g.key]).join(', ') : 'listening...';
     const all = S.active ? soundText(S.active.sounds) : '';
     say('Now: ' + now + (all ? '  |  This walk: ' + all : ''));
     const top = r.max.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
-    $('top3').textContent = 'Model hears: ' + top.map(([v, i]) => meta.names[i] + ' ' + v.toFixed(2)).join(', ');
+    $('top3').textContent = 'Model hears: ' + top.map(([v, i]) => meta.names[i] + ' ' + (v * 100).toFixed(0) + '%').join(', ');
   }
 
   async function start() {
@@ -76,9 +103,15 @@
     try {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       const audioReady = ctx.resume();
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-      });
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true }
+        });
+      } catch (err) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+      stream = mediaStream;
       await audioReady;
       if (ctx.state !== 'running') throw new Error('Audio is paused by the browser. Tap to retry.');
       await load();
@@ -90,7 +123,8 @@
       const need = ctx.sampleRate * WINDOW_S;
       proc.onaudioprocess = e => {
         if (!S.active) return;
-        chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); got += 4096;
+        const input = e.inputBuffer.getChannelData(0);
+        chunks.push(new Float32Array(input)); got += 4096;
         if (got >= need && !busy) {
           const raw = new Float32Array(got); let o = 0;
           for (const c of chunks) { raw.set(c, o); o += c.length; }
@@ -100,7 +134,7 @@
       };
       src.connect(proc); proc.connect(ctx.destination);
       running = true; label('Listening. Tap to pause');
-      say('Listening...');
+      say('Listening for sounds...');
     } catch (e) {
       console.error(e);
       if (S.active) S.active.soundDetectionUnavailable = true;
